@@ -8,7 +8,13 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: validate
+      jdbc:
+        time_zone: UTC
+      # Necesario para que Hibernate acepte TIMESTAMPTZ mapeado a Instant sin warnings
+      type:
+        preferred_instant_jdbc_type: TIMESTAMP_WITH_TIMEZONE
+
+
     open-in-view: false
     properties:
       hibernate:
