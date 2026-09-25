@@ -11,7 +11,6 @@ import com.example.bank.util.UlidGenerator;
 import com.example.bank.web.money.MoneyFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,16 +34,18 @@ public class TransferService {
     }
 
     /**
-     * Orquesta la transferencia sin tocar JPA ni TX directamente.
-     * La lógica transaccional vive en TransferPersistence, invocada a
-     * través del proxy de Spring (bean separado, no self-invocation).
+     * Resultado de una ejecución de transferencia.
+     * fresh=true  -> la transferencia se creó en esta request (201).
+     * fresh=false -> fue un reintento idempotente de una COMPLETED (200).
      */
-    public Transfer execute(UUID idempotencyKey,
-                            String sourceAccountId,
-                            String destinationAccountId,
-                            String amountRaw,
-                            String currencyRaw,
-                            String reference) {
+    public record ExecutionResult(Transfer transfer, boolean fresh) {}
+
+    public ExecutionResult execute(UUID idempotencyKey,
+                                   String sourceAccountId,
+                                   String destinationAccountId,
+                                   String amountRaw,
+                                   String currencyRaw,
+                                   String reference) {
 
         // 1. Validación de forma (400). No toca base.
         Currency currency = parseCurrency(currencyRaw);
@@ -66,7 +67,8 @@ public class TransferService {
         TransferPersistence.InsertOutcome outcome = persistence.reserveKey(draft);
 
         if (outcome instanceof TransferPersistence.InsertOutcome.Existing existing) {
-            return resolveExisting(existing.existing(), draft);
+            Transfer resolved = resolveExisting(existing.existing(), draft);
+            return new ExecutionResult(resolved, false);
         }
 
         // 3. Es nueva: ejecutar la transferencia.
@@ -75,9 +77,8 @@ public class TransferService {
             log.info("transfer.completed transfer_id={} source={} destination={} amount_cents={} currency={}",
                     completed.getTransferId(), sourceAccountId, destinationAccountId,
                     amountInCents, currency.name());
-            return completed;
+            return new ExecutionResult(completed, true);
         } catch (DomainException businessFailure) {
-            // Persistir FAILED en TX nueva y reproducir el error al cliente.
             persistence.markFailed(draft.transferId(), businessFailure.getCode());
             log.warn("transfer.failed transfer_id={} code={}",
                     draft.transferId(), businessFailure.getCode().name());
@@ -85,14 +86,6 @@ public class TransferService {
         }
     }
 
-    /**
-     * Resuelve el caso "la idempotency_key ya existía".
-     *  - Params distintos -> 409.
-     *  - Mismos params, original COMPLETED -> devolver la original.
-     *  - Mismos params, original FAILED    -> reproducir el mismo código.
-     *  - Mismos params, original PENDING   -> imposible en este diseño
-     *    (PENDING solo existe dentro de una TX). Si ocurre, es un bug.
-     */
     private Transfer resolveExisting(Transfer existing, TransferPersistence.TransferDraft draft) {
         boolean sameParams = existing.matchesRequest(
                 draft.sourceAccountId(),
@@ -131,11 +124,6 @@ public class TransferService {
                         "Transfer not found: " + transferId));
     }
 
-    /**
-     * Historial paginado por limit/offset reales.
-     * No usamos Page<> porque PageRequest.of() toma page-number, no offset.
-     * Retornamos items + total para que el controlador arme el payload.
-     */
     @Transactional(readOnly = true)
     public HistoryPage history(String accountId, int limit, int offset) {
         if (limit < 1 || limit > 100) {
