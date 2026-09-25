@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -50,10 +51,19 @@ public interface TransferRepository extends JpaRepository<Transfer, String> {
      * Historial de una cuenta: entrantes y salientes, ordenado por created_at DESC.
      * Incluye COMPLETED y FAILED (auditoría completa).
      */
-    @Query("""
-        SELECT t FROM Transfer t
-        WHERE t.sourceAccountId = :accountId OR t.destinationAccountId = :accountId
-        ORDER BY t.createdAt DESC
-        """)
-    Page<Transfer> findHistoryForAccount(@Param("accountId") String accountId, Pageable pageable);
+    @Query(value = """
+    SELECT * FROM transfers
+    WHERE source_account_id = :accountId OR destination_account_id = :accountId
+    ORDER BY created_at DESC
+    LIMIT :limit OFFSET :offset
+    """, nativeQuery = true)
+    List<Transfer> findHistoryPage(@Param("accountId") String accountId,
+                                   @Param("limit") int limit,
+                                   @Param("offset") int offset);
+
+    @Query(value = """
+    SELECT COUNT(*) FROM transfers
+    WHERE source_account_id = :accountId OR destination_account_id = :accountId
+    """, nativeQuery = true)
+    long countHistory(@Param("accountId") String accountId);
 }
