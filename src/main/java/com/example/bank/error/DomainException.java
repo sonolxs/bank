@@ -2,20 +2,21 @@ package com.example.bank.error;
 
 import org.springframework.http.HttpStatus;
 
-/**
- * Excepción de negocio. Lleva el código de error y el status HTTP
- * que el handler global debe usar. Un solo tipo para toda la jerarquía
- * evita proliferación de subclases.
- */
 public class DomainException extends RuntimeException {
 
     private final ErrorCode code;
     private final HttpStatus status;
+    private final String transferId;
 
     public DomainException(ErrorCode code, HttpStatus status, String message) {
+        this(code, status, message, null);
+    }
+
+    public DomainException(ErrorCode code, HttpStatus status, String message, String transferId) {
         super(message);
         this.code = code;
         this.status = status;
+        this.transferId = transferId;
     }
 
     public ErrorCode getCode() {
@@ -24,5 +25,9 @@ public class DomainException extends RuntimeException {
 
     public HttpStatus getStatus() {
         return status;
+    }
+
+    public String getTransferId() {
+        return transferId;
     }
 }

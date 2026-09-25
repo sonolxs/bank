@@ -78,12 +78,18 @@ public class TransferService {
                     completed.getTransferId(), sourceAccountId, destinationAccountId,
                     amountInCents, currency.name());
             return new ExecutionResult(completed, true);
-        } catch (DomainException businessFailure) {
-            persistence.markFailed(draft.transferId(), businessFailure.getCode());
-            log.warn("transfer.failed transfer_id={} code={}",
-                    draft.transferId(), businessFailure.getCode().name());
-            throw businessFailure;
-        }
+         } catch (DomainException businessFailure) {
+        persistence.markFailed(draft.transferId(), businessFailure.getCode());
+        log.warn("transfer.failed transfer_id={} code={}",
+                draft.transferId(), businessFailure.getCode().name());
+        // Re-lanzamos con el transfer_id para que el cliente lo reciba.
+        throw new DomainException(
+                businessFailure.getCode(),
+                businessFailure.getStatus(),
+                businessFailure.getMessage(),
+                draft.transferId()
+        );
+    }
     }
 
     private Transfer resolveExisting(Transfer existing, TransferPersistence.TransferDraft draft) {
@@ -96,15 +102,22 @@ public class TransferService {
         );
 
         if (!sameParams) {
-            throw new DomainException(ErrorCode.IDEMPOTENCY_KEY_CONFLICT,
+            throw new DomainException(
+                    ErrorCode.IDEMPOTENCY_KEY_CONFLICT,
                     HttpStatus.CONFLICT,
-                    "Idempotency-Key reused with different parameters.");
+                    "Idempotency-Key reused with different parameters.",
+                    existing.getTransferId()
+            );
         }
 
         if (existing.getStatus() == TransferStatus.FAILED) {
             ErrorCode originalCode = ErrorCode.valueOf(existing.getFailureCode());
-            throw new DomainException(originalCode, statusForCode(originalCode),
-                    messageForCode(originalCode));
+            throw new DomainException(
+                    originalCode,
+                    statusForCode(originalCode),
+                    messageForCode(originalCode),
+                    existing.getTransferId()
+            );
         }
 
         if (existing.getStatus() == TransferStatus.PENDING) {
@@ -112,6 +125,7 @@ public class TransferService {
                     HttpStatus.INTERNAL_SERVER_ERROR,
                     "Transfer in PENDING state observed outside transaction.");
         }
+
 
         return existing;
     }

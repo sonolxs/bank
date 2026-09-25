@@ -22,7 +22,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DomainException.class)
     public ResponseEntity<ErrorResponse> handleDomain(DomainException ex) {
         ErrorResponse body = new ErrorResponse(
-                new ErrorResponse.ErrorBody(ex.getCode().name(), ex.getMessage(), null)
+                new ErrorResponse.ErrorBody(
+                        ex.getCode().name(),
+                        ex.getMessage(),
+                        ex.getTransferId()
+                )
         );
         return ResponseEntity.status(ex.getStatus()).body(body);
     }
