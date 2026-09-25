@@ -30,7 +30,8 @@ public class TransferMapper {
                 t.getCurrency().name(),
                 t.getReference(),
                 t.getCreatedAt(),
-                t.getIdempotencyKey()
+                t.getIdempotencyKey(),
+                t.getFailureCode()
         );
     }
 

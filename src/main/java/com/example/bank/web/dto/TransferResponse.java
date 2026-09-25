@@ -14,5 +14,6 @@ public record TransferResponse(
         @JsonProperty("currency") String currency,
         @JsonProperty("reference") String reference,
         @JsonProperty("created_at") Instant createdAt,
-        @JsonProperty("idempotency_key") UUID idempotencyKey
+        @JsonProperty("idempotency_key") UUID idempotencyKey,
+        @JsonProperty("failure_code") String failureCode
 ) {}
