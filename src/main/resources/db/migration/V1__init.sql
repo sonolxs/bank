@@ -9,34 +9,34 @@
 -- =============================================================================
 
 CREATE TABLE accounts (
-    account_id  TEXT        PRIMARY KEY,
-    currency    CHAR(3)     NOT NULL,
-    balance     BIGINT      NOT NULL,
-    status      TEXT        NOT NULL,
-    CONSTRAINT accounts_balance_non_negative CHECK (balance >= 0),
-    CONSTRAINT accounts_currency_iso         CHECK (currency IN ('MXN', 'USD')),
-    CONSTRAINT accounts_status_valid         CHECK (status IN ('ACTIVE', 'FROZEN', 'CLOSED'))
+                          account_id  TEXT        PRIMARY KEY,
+                          currency    VARCHAR(3)  NOT NULL,
+                          balance     BIGINT      NOT NULL,
+                          status      TEXT        NOT NULL,
+                          CONSTRAINT accounts_balance_non_negative CHECK (balance >= 0),
+                          CONSTRAINT accounts_currency_iso         CHECK (currency IN ('MXN', 'USD')),
+                          CONSTRAINT accounts_status_valid         CHECK (status IN ('ACTIVE', 'FROZEN', 'CLOSED'))
 );
 
 CREATE TABLE transfers (
-    transfer_id             TEXT        PRIMARY KEY,
-    idempotency_key         UUID        NOT NULL,
-    source_account_id       TEXT        NOT NULL,
-    destination_account_id  TEXT        NOT NULL,
-    amount                  BIGINT      NOT NULL,
-    currency                CHAR(3)     NOT NULL,
-    reference               VARCHAR(140),
-    status                  TEXT        NOT NULL,
-    failure_code            TEXT,
-    created_at              TIMESTAMPTZ NOT NULL,
-    completed_at            TIMESTAMPTZ,
-    CONSTRAINT transfers_idempotency_unique       UNIQUE (idempotency_key),
-    CONSTRAINT transfers_amount_positive          CHECK (amount > 0),
-    CONSTRAINT transfers_currency_iso             CHECK (currency IN ('MXN', 'USD')),
-    CONSTRAINT transfers_status_valid             CHECK (status IN ('PENDING', 'COMPLETED', 'FAILED')),
-    CONSTRAINT transfers_distinct_accounts        CHECK (source_account_id <> destination_account_id),
-    CONSTRAINT transfers_source_fk                FOREIGN KEY (source_account_id)      REFERENCES accounts (account_id),
-    CONSTRAINT transfers_destination_fk           FOREIGN KEY (destination_account_id) REFERENCES accounts (account_id)
+                           transfer_id             TEXT        PRIMARY KEY,
+                           idempotency_key         UUID        NOT NULL,
+                           source_account_id       TEXT        NOT NULL,
+                           destination_account_id  TEXT        NOT NULL,
+                           amount                  BIGINT      NOT NULL,
+                           currency                VARCHAR(3)  NOT NULL,
+                           reference               VARCHAR(140),
+                           status                  TEXT        NOT NULL,
+                           failure_code            TEXT,
+                           created_at              TIMESTAMPTZ NOT NULL,
+                           completed_at            TIMESTAMPTZ,
+                           CONSTRAINT transfers_idempotency_unique UNIQUE (idempotency_key),
+                           CONSTRAINT transfers_amount_positive    CHECK (amount > 0),
+                           CONSTRAINT transfers_currency_iso       CHECK (currency IN ('MXN', 'USD')),
+                           CONSTRAINT transfers_status_valid       CHECK (status IN ('PENDING', 'COMPLETED', 'FAILED')),
+                           CONSTRAINT transfers_distinct_accounts  CHECK (source_account_id <> destination_account_id),
+                           CONSTRAINT transfers_source_fk          FOREIGN KEY (source_account_id) REFERENCES accounts (account_id),
+                           CONSTRAINT transfers_destination_fk     FOREIGN KEY (destination_account_id) REFERENCES accounts (account_id)
 );
 
 -- Índice para el historial de una cuenta ordenado por created_at DESC.
