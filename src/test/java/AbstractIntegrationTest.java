@@ -7,7 +7,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 /**
  * Base para todos los tests de integración.
  *
@@ -20,6 +20,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
  * integración se saltan con warning en lugar de fallar. Declarado en README.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureTestRestTemplate
 @ActiveProfiles("test")
 @Testcontainers(disabledWithoutDocker = true)
 public abstract class AbstractIntegrationTest {
