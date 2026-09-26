@@ -56,8 +56,8 @@ class ConcurrencyIT extends AbstractIntegrationTest {
                 }
 
                 // Alternar dirección: pares A->B, impares B->A.
-                String from = (idx % 2 == 0) ? "acc_001" : "acc_002";
-                String to   = (idx % 2 == 0) ? "acc_002" : "acc_001";
+                String from = (idx <15) ? "acc_001" : "acc_002";
+                String to   = (idx <15) ? "acc_002" : "acc_001";
 
                 String key = String.format("66666666-6666-4666-8666-%012d", idx);
                 String body = "{\"source_account_id\":\"" + from + "\",\"destination_account_id\":\"" + to

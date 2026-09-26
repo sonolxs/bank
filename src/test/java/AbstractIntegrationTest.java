@@ -1,5 +1,6 @@
 package com.example.bank;
 
+import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
@@ -11,6 +12,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureTestRestTemplate
 @ActiveProfiles("test")
+//@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Testcontainers(disabledWithoutDocker = true)
 public abstract class AbstractIntegrationTest {
 
@@ -21,4 +23,13 @@ public abstract class AbstractIntegrationTest {
                     .withDatabaseName("bank_test")
                     .withUsername("bank")
                     .withPassword("bank");
+
+    @org.springframework.beans.factory.annotation.Value("${spring.datasource.url:NOT_SET}")
+    String datasourceUrl;
+
+    @org.junit.jupiter.api.Test
+    void printDatasourceUrl() {
+        System.out.println("DATASOURCE URL = " + datasourceUrl);
+    }
+
 }
