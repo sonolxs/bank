@@ -50,10 +50,10 @@ docker stop bank-pg
 
 ## Cómo correr las pruebas
 
-Prueba crítica de concurrencia:
+Un solo comando:
 
 ```bash
-./mvnw test -Dtest=ConcurrencyIT
+./mvnw test
 ```
 
 Testcontainers levanta un PostgreSQL 16 limpio por corrida, aplica
@@ -272,8 +272,6 @@ curl -s -X POST http://localhost:8080/transfers \
 
 # 4. Repetir el mismo curl: devuelve 200, mismo transfer_id, saldos intactos.
 
-# 5. Correr test concurrencia
-
-./mvnw test -Dtest=ConcurrencyIT
-
+# 5. Correr la suite completa
+./mvnw test
 ```
