@@ -33,6 +33,10 @@ docker run --rm -d --name bank-pg \
   -p 5432:5432 postgres:16 \
   && ./mvnw spring-boot:run
 ```
+(podemos usar las variables de entorno
+DB_URL: url de la BD
+DB_USER: usuario de la BD
+DB_PASSWORD : contraseña de la BD)
 
 Flyway aplica `V1__init.sql` automáticamente al arrancar: crea el
 esquema con los `CHECK` y el `UNIQUE`, y siembra las **8 cuentas** del
@@ -46,10 +50,10 @@ docker stop bank-pg
 
 ## Cómo correr las pruebas
 
-Un solo comando:
+Prueba crítica de concurrencia:
 
 ```bash
-./mvnw test
+./mvnw test -Dtest=ConcurrencyIT
 ```
 
 Testcontainers levanta un PostgreSQL 16 limpio por corrida, aplica
@@ -61,11 +65,7 @@ automáticamente (anotación `disabledWithoutDocker = true` en
 los invariantes de este sistema solo se pueden verificar contra un
 motor real.
 
-Prueba crítica sola:
 
-```bash
-./mvnw test -Dtest=ConcurrencyIT
-```
 
 ## Variables de entorno
 
@@ -272,6 +272,8 @@ curl -s -X POST http://localhost:8080/transfers \
 
 # 4. Repetir el mismo curl: devuelve 200, mismo transfer_id, saldos intactos.
 
-# 5. Correr la suite completa
-./mvnw test
+# 5. Correr test concurrencia
+
+./mvnw test -Dtest=ConcurrencyIT
+
 ```
