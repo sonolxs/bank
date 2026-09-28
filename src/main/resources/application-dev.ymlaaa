@@ -1,6 +1,0 @@
-spring:
-  datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/bassnk}
-    username: ${DB_USER:bank}
-    password: ${DB_PASSWORD:bank}
-    driver-class-name: org.postgresql.Driver
